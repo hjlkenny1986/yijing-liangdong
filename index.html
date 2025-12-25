@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>周易有答案 - 详细手册</title>
+    <style>
+        :root { --p: #37352f; --bg: #ffffff; --s-bg: #f7f6f3; --accent: #a44d11; }
+        body { font-family: system-ui; color: var(--p); background: var(--bg); margin: 0; padding: 0; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        #home, #list, #detail { display: none; }
+        .active { display: block !important; }
+        
+        /* 按钮与卡片 */
+        .btn { display: block; width: 100%; padding: 15px; margin: 15px 0; border: 1px solid #ddd; border-radius: 10px; background: var(--s-bg); text-align: center; font-size: 1.1rem; cursor: pointer; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .card { padding: 10px; border: 1px solid #eee; text-align: center; border-radius: 8px; font-size: 0.9rem; }
+        
+        /* 详情内容 */
+        .section { margin: 20px 0; padding: 15px; background: var(--s-bg); border-radius: 10px; }
+        .section h3 { margin-top: 0; color: var(--accent); border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .yao-item { padding: 10px 0; border-bottom: 1px dashed #ccc; font-size: 0.95rem; }
+        textarea { width: 100%; height: 120px; padding: 10px; box-sizing: border-box; border-radius: 8px; border: 1px solid #ddd; margin: 10px 0; }
+        .save-btn { width: 100%; padding: 12px; background: var(--p); color: white; border: none; border-radius: 8px; }
+        .nav { text-align: center; margin: 30px 0; color: #888; text-decoration: underline; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="home" class="active">
+        <h1 style="text-align:center; margin-top:50px;">☯️ 周易有答案</h1>
+        <p style="text-align:center; color:#666;">梁冬视角 · 详细实战笔记</p>
+        <div onclick="showRandom()" class="btn" style="background:var(--p); color:white;">🎲 随机起一卦</div>
+        <div onclick="showList()" class="btn">📚 详细六十四卦名录</div>
+    </div>
+
+    <div id="list">
+        <h3>六十四卦检索</h3>
+        <div id="gua-grid" class="grid"></div>
+        <div class="nav" onclick="goHome()">返回首页</div>
+    </div>
+
+    <div id="detail">
+        <h2 id="d-name"></h2>
+        <div class="section">
+            <h3>🌟 核心智慧 (梁冬深度解读)</h3>
+            <p id="d-quote" style="white-space: pre-wrap;"></p>
+        </div>
+        <div class="section">
+            <h3>🔍 解卦实战手册</h3>
+            <p><strong>能量/处境：</strong><br><span id="d-state"></span></p>
+            <p><strong>避坑/提醒：</strong><br><span id="d-warn"></span></p>
+            <p><strong>行动建议：</strong><br><span id="d-advice"></span></p>
+        </div>
+        <div class="section">
+            <h3>📜 六爻详解</h3>
+            <div id="d-yao"></div>
+        </div>
+        <div class="section" style="background:#fffef0;">
+            <h3>📝 实战记录与感悟</h3>
+            <textarea id="user-note" placeholder="点击这里输入你的解卦案例或复习心法..."></textarea>
+            <button class="save-btn" onclick="saveNote()">保存到手机本地</button>
+            <p id="status" style="font-size:12px; color:green; text-align:center;"></p>
+        </div>
+        <div class="nav" onclick="goHome()">返回首页</div>
+    </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+    let currentId = "";
+    function init() {
+        const grid = document.getElementById('gua-grid');
+        grid.innerHTML = "";
+        for (let i = 1; i <= 64; i++) {
+            let id = i.toString().padStart(2, '0');
+            let card = document.createElement('div');
+            card.className = 'card';
+            card.innerText = guaData[id] ? guaData[id].name : id + " 待更新";
+            card.onclick = () => showDetail(id);
+            grid.appendChild(card);
+        }
+    }
+    function showDetail(id) {
+        const data = guaData[id];
+        if (!data) { alert("该卦象详细内容正在整理中，请等待下一批更新！"); return; }
+        currentId = id;
+        document.getElementById('home').className = "";
+        document.getElementById('list').className = "";
+        document.getElementById('detail').className = "active";
+        document.getElementById('d-name').innerText = data.name;
+        document.getElementById('d-quote').innerText = data.quote;
+        document.getElementById('d-state').innerText = data.state;
+        document.getElementById('d-warn').innerText = data.warn;
+        document.getElementById('d-advice').innerText = data.advice;
+        document.getElementById('d-yao').innerHTML = data.yao.map(y => `<div class="yao-item">${y}</div>`).join('');
+        document.getElementById('user-note').value = localStorage.getItem('yj_note_' + id) || "";
+        window.scrollTo(0,0);
+    }
+    function showRandom() { const keys = Object.keys(guaData); showDetail(keys[Math.floor(Math.random()*keys.length)]); }
+    function showList() { document.getElementById('home').className = ""; document.getElementById('detail').className = ""; document.getElementById('list').className = "active"; }
+    function goHome() { document.getElementById('home').className = "active"; document.getElementById('detail').className = ""; document.getElementById('list').className = ""; }
+    function saveNote() { 
+        localStorage.setItem('yj_note_' + currentId, document.getElementById('user-note').value);
+        document.getElementById('status').innerText = "已保存！即使关闭网页也不会丢失。";
+        setTimeout(() => document.getElementById('status').innerText="", 2000);
+    }
+    window.onload = init;
+</script>
+</body>
+</html>
