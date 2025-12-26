@@ -20,25 +20,33 @@
         .input-group input { width: 75px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; text-align: center; font-size: 1rem; }
         
         /* 按钮样式 */
-        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; background: var(--s-bg); text-align: center; font-size: 1.1rem; cursor: pointer; box-sizing: border-box; }
+        .btn { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 1px solid #ddd; border-radius: 12px; background: var(--s-bg); text-align: center; font-size: 1.1rem; cursor: pointer; box-sizing: border-box; text-decoration: none; color: inherit; }
         .btn-primary { background: var(--gold); color: white; border: none; font-weight: bold; }
 
-        /* 详情页解卦区 */
-        .section { margin: 20px 0; padding-bottom: 15px; border-bottom: 1px solid #eee; }
-        .label { font-weight: bold; color: var(--accent); font-size: 0.9rem; margin-bottom: 5px; }
+        /* 详情页展示区 */
+        .section { margin: 25px 0; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .label { font-weight: bold; color: var(--accent); font-size: 0.9rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .content-text { font-size: 1rem; color: #444; white-space: pre-wrap; }
+        
+        /* 六爻辞专用样式 */
+        .yao-list { margin-top: 10px; }
+        .yao-item { padding: 12px; background: var(--s-bg); margin-bottom: 8px; border-radius: 8px; font-size: 0.95rem; border-left: 4px solid #ddd; }
+        .yao-item.active-yao { border-left: 4px solid var(--gold); background: #fff9e6; font-weight: bold; }
+
+        /* AI 提问区 */
         .ask-ai-box { background: #eef6ff; padding: 15px; border-radius: 10px; border-left: 5px solid #2b6cb0; margin: 20px 0; }
         
         /* 报告生成区 */
         #report-generator { background: #f9f9f9; padding: 20px; border-radius: 12px; border: 1px dashed #ccc; margin-top: 30px; }
-        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; font-family: inherit; }
+        textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; box-sizing: border-box; font-family: inherit; line-height: 1.5; }
         
         /* 底部导航 */
-        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 600px; background: rgba(255,255,255,0.95); display: flex; border-top: 1px solid #eee; padding: 12px 0; backdrop-filter: blur(10px); }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 600px; background: rgba(255,255,255,0.95); display: flex; border-top: 1px solid #eee; padding: 12px 0; backdrop-filter: blur(10px); z-index: 100; }
         .nav-bar div { flex: 1; text-align: center; font-size: 0.85rem; color: #666; cursor: pointer; }
 
         /* 列表网格 */
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .card { padding: 12px; border: 1px solid #eee; text-align: center; border-radius: 8px; font-size: 0.85rem; background: white; }
+        .card { padding: 12px; border: 1px solid #eee; text-align: center; border-radius: 8px; font-size: 0.85rem; background: white; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -47,7 +55,7 @@
     <div id="home" class="active">
         <div class="hero">
             <h1>周易有答案</h1>
-            <p>基于经典智慧的起卦与解卦工具</p>
+            <p>经典智慧起卦与深度复习工具</p>
         </div>
 
         <div class="workbench-box">
@@ -57,12 +65,12 @@
                 <input type="number" id="num2" placeholder="数字2">
                 <input type="number" id="num3" placeholder="数字3">
             </div>
-            <button class="btn btn-primary" onclick="doDivination()">开始起卦并分析</button>
-            <p style="font-size:0.8rem; color:#888; text-align:center;">(根据三数组卦：下卦、上卦、动爻)</p>
+            <button class="btn btn-primary" onclick="doDivination()">计算卦象与动爻</button>
+            <p style="font-size:0.8rem; color:#888; text-align:center;">(由数字求：下卦、上卦、动爻)</p>
         </div>
 
-        <div class="btn" onclick="showList()">📖 64 卦速查表</div>
-        <div class="btn" onclick="showRandom()">🎲 每日随机复习</div>
+        <div class="btn" onclick="showList()">📖 64 卦速查表 (复习入口)</div>
+        <div class="btn" onclick="showRandom()">🎲 随机抽取一卦</div>
     </div>
 
     <div id="list">
@@ -74,33 +82,53 @@
         <div class="btn" onclick="goHome()">← 重新起卦</div>
         
         <h2 id="d-name" style="color:var(--accent); margin-bottom:10px;"></h2>
-        <div id="d-motion-info" style="font-weight:bold; color:var(--gold); margin-bottom:20px;"></div>
+        <div id="d-motion-info" style="font-weight:bold; color:var(--gold); margin-bottom:20px; font-size:1.1rem;"></div>
 
         <div class="ask-ai-box">
-            <div class="label" style="color:#2b6cb0;">💡 获取深度建议</div>
-            <p style="font-size:0.9rem; margin:5px 0;">复制下文发给智能助手：<br><b>“我求得<span id="ai-gua-name"></span>，动爻是<span id="ai-motion"></span>。我想问[这里输入你的问题]，请结合易经智慧进行深度解卦。”</b></p>
+            <div class="label" style="color:#2b6cb0;">💡 深度解卦咨询</div>
+            <p style="font-size:0.9rem; margin:5px 0;">复制下文发给智能助手：<br><b>“我求得<span id="ai-gua-name"></span>，动爻是<span id="ai-motion"></span>。我想问[在此输入具体问题]，请结合易经智慧深度解读。”</b></p>
+        </div>
+
+        <div class="section">
+            <div class="label">核心金句</div>
+            <div id="d-quote" class="content-text"></div>
+        </div>
+
+        <div class="section">
+            <div class="label">六爻辞内容</div>
+            <div id="d-yao" class="yao-list"></div>
+        </div>
+
+        <div class="section">
+            <div class="label">详细意象</div>
+            <div id="d-state" class="content-text"></div>
+        </div>
+
+        <div class="section">
+            <div class="label">避坑指南</div>
+            <div id="d-warn" class="content-text"></div>
+        </div>
+
+        <div class="section">
+            <div class="label">行动建议</div>
+            <div id="d-advice" class="content-text"></div>
         </div>
 
         <div id="report-generator">
-            <h3 style="margin-top:0;">📋 报告生成器</h3>
-            <p style="font-size:0.85rem; color:#666;">点击下方按钮，将全卦信息抓取至编辑框：</p>
-            <button class="btn" style="background:#2c3e50; color:white; font-size:0.9rem;" onclick="prepareReport()">预填内容并开始编辑</button>
+            <h3 style="margin-top:0;">📋 报告编辑台</h3>
+            <p style="font-size:0.85rem; color:#666;">点击按钮，自动将上述所有内容合并到编辑框：</p>
+            <button class="btn" style="background:#2c3e50; color:white; font-size:0.9rem;" onclick="prepareReport()">生成完整内容并手动编辑</button>
             
             <div id="report-edit-area" style="display:none; margin-top:15px;">
-                <div class="label">编辑报告内容：</div>
-                <textarea id="final-report-text" rows="12"></textarea>
+                <div class="label">编辑最终报告：</div>
+                <textarea id="final-report-text" rows="15"></textarea>
                 
                 <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="btn" style="background:var(--gold); color:white; flex:1;" onclick="copyReport()">复制文字</button>
-                    <button class="btn" style="background:var(--accent); color:white; flex:1;" onclick="previewPoster()">图片预览</button>
+                    <button class="btn" style="background:var(--gold); color:white; flex:1;" onclick="copyReport()">复制文本</button>
+                    <button class="btn" style="background:var(--accent); color:white; flex:1;" onclick="previewPoster()">海报预览</button>
                 </div>
             </div>
         </div>
-
-        <div class="section"><div class="label">核心金句</div><div id="d-quote"></div></div>
-        <div class="section"><div class="label">详细意象</div><div id="d-state"></div></div>
-        <div class="section"><div class="label">避坑指南</div><div id="d-warn"></div></div>
-        <div class="section"><div class="label">行动建议</div><div id="d-advice"></div></div>
     </div>
 </div>
 
@@ -115,6 +143,7 @@
     let currentId = "";
     let currentMotion = 0;
 
+    // 卦象查找映射表
     const guaLookup = {
         "11":"01", "88":"02", "46":"03", "67":"04", "16":"05", "61":"06", "68":"07", "86":"08",
         "15":"09", "21":"10", "18":"11", "81":"12", "31":"13", "13":"14", "78":"15", "84":"16",
@@ -128,7 +157,7 @@
 
     function init() {
         const grid = document.getElementById('grid');
-        if (typeof guaData === 'undefined') { return; }
+        if (typeof guaData === 'undefined') { alert("未找到 data.js 数据文件"); return; }
         Object.keys(guaData).sort().forEach(id => {
             const div = document.createElement('div');
             div.className = 'card';
@@ -150,7 +179,7 @@
         let lookupKey = "" + lower + upper;
         let id = guaLookup[lookupKey];
 
-        if (!id) { alert("匹配失败"); return; }
+        if (!id) { alert("找不到对应卦象，请检查数字"); return; }
         currentMotion = motion;
         showDetail(id);
     }
@@ -165,10 +194,25 @@
         document.getElementById('d-name').innerText = data.name;
         document.getElementById('ai-gua-name').innerText = data.name;
         
+        // 渲染动爻信息
+        const yaoContainer = document.getElementById('d-yao');
+        yaoContainer.innerHTML = "";
+        data.yao.forEach((text, index) => {
+            const yaoIdx = index + 1;
+            const div = document.createElement('div');
+            div.className = 'yao-item';
+            if (yaoIdx === currentMotion) {
+                div.className += ' active-yao';
+                div.innerHTML = `<strong>第${yaoIdx}爻(动)：${text}</strong>`;
+            } else {
+                div.innerHTML = `第${yaoIdx}爻：${text}`;
+            }
+            yaoContainer.appendChild(div);
+        });
+
         if (currentMotion > 0) {
-            const yaoText = data.yao[currentMotion - 1];
-            document.getElementById('d-motion-info').innerText = "⚖️ 动爻指引：第 " + currentMotion + " 爻 (" + yaoText + ")";
-            document.getElementById('ai-motion').innerText = "第 " + currentMotion + " 爻 (" + yaoText + ")";
+            document.getElementById('d-motion-info').innerText = "⚖️ 动爻指引：第 " + currentMotion + " 爻";
+            document.getElementById('ai-motion').innerText = "第 " + currentMotion + " 爻 (" + data.yao[currentMotion-1] + ")";
         } else {
             document.getElementById('d-motion-info').innerText = "✨ 静卦：参考全卦大意";
             document.getElementById('ai-motion').innerText = "无";
@@ -178,22 +222,26 @@
         document.getElementById('d-state').innerText = data.state;
         document.getElementById('d-warn').innerText = data.warn;
         document.getElementById('d-advice').innerText = data.advice;
+        
+        // 重置报告编辑区
         document.getElementById('report-edit-area').style.display = 'none';
         window.scrollTo(0,0);
     }
 
     function prepareReport() {
         const data = guaData[currentId];
-        const motionInfo = currentMotion > 0 ? "第" + currentMotion + "爻动\n爻辞：" + data.yao[currentMotion-1] : "静卦";
+        let yaoContent = data.yao.map((y, i) => `第${i+1}爻：${y}`).join('\n');
+        const motionInfo = currentMotion > 0 ? `【当前动爻】第${currentMotion}爻\n爻辞：${data.yao[currentMotion-1]}` : "【当前卦象】静卦";
         
-        const prefilled = `【🔮 解卦报告】\n\n` +
+        const prefilled = `【🔮 易经解卦报告】\n\n` +
                           `卦名：${data.name}\n` +
-                          `动爻：${motionInfo}\n\n` +
+                          `${motionInfo}\n\n` +
                           `【核心金句】\n${data.quote}\n\n` +
+                          `【六爻全辞】\n${yaoContent}\n\n` +
                           `【详细意象】\n${data.state}\n\n` +
                           `【避坑指南】\n${data.warn}\n\n` +
                           `【行动建议】\n${data.advice}\n\n` +
-                          `【深度解读与感悟】\n(在此输入分析内容...)\n\n` +
+                          `【深度分析与感悟】\n(此处粘贴AI的深度建议或输入您的个人感悟...)\n\n` +
                           `—— 知行合一，顺势而为 ——`;
         
         document.getElementById('final-report-text').value = prefilled;
@@ -202,7 +250,7 @@
 
     function copyReport() {
         const text = document.getElementById('final-report-text').value;
-        navigator.clipboard.writeText(text).then(() => alert("已复制"));
+        navigator.clipboard.writeText(text).then(() => alert("报告内容已复制"));
     }
 
     function previewPoster() {
@@ -211,9 +259,9 @@
         win.document.write(`
             <html><head><style>
                 body { font-family: serif; background: #f4f1ea; padding: 20px; }
-                .p { border: 4px solid #d4a017; background: white; padding: 25px; max-width: 500px; margin: auto; }
-                h2 { color: #a44d11; border-bottom: 2px solid #d4a017; padding-bottom: 10px; }
-                .content { font-size: 0.95rem; line-height: 1.6; color: #333; }
+                .p { border: 4px solid #d4a017; background: white; padding: 25px; max-width: 600px; margin: auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+                h2 { color: #a44d11; border-bottom: 2px solid #d4a017; padding-bottom: 10px; text-align: center; }
+                .content { font-size: 1rem; line-height: 1.6; color: #333; }
             </style></head><body>
                 <div class="p"><h2>解卦报告</h2><div class="content">${content}</div></div>
             </body></html>
