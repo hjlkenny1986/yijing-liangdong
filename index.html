@@ -65,7 +65,33 @@
         <div class="nav" onclick="goHome()">返回首页</div>
     </div>
 </div>
+<div id="workbench" style="background:#f9f9f9; padding:20px; border:2px solid #eee; margin:20px 0; border-radius:10px;">
+    <h3>🔮 深度解卦工作台</h3>
+    
+    <div style="margin-bottom:15px;">
+        <input type="number" id="num1" placeholder="数字1(下卦)" style="width:80px;">
+        <input type="number" id="num2" placeholder="数字2(上卦)" style="width:80px;">
+        <input type="number" id="num3" placeholder="数字3(动爻)" style="width:80px;">
+        <button onclick="calculateGua()">自动起卦</button>
+    </div>
 
+    <div id="report-area" style="display:none;">
+        <p><strong>卦象：</strong> <span id="report-gua-name"></span></p>
+        <p>核心建议（可修改）：</p>
+        <textarea id="edit-advice" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+        
+        <p>智慧（可修改）：</p>
+        <textarea id="edit-quote" style="width:100%; height:80px; margin-bottom:10px;"></textarea>
+
+        <p>我的实战感悟（手动输入）：</p>
+        <textarea id="my-insight" placeholder="在这里输入你对求卦人的针对性分析..." style="width:100%; height:100px; border:1px solid #d4a017;"></textarea>
+
+        <div style="margin-top:15px;">
+            <button onclick="exportText()" style="background:#2c3e50; color:white;">生成文字报告</button>
+            <button onclick="exportImage()" style="background:#d4a017; color:white;">生成图片报告 (截图模式)</button>
+        </div>
+    </div>
+</div>
 <script src="data.js"></script>
 <script>
     let currentId = "";
@@ -105,6 +131,53 @@
         document.getElementById('status').innerText = "已保存！即使关闭网页也不会丢失。";
         setTimeout(() => document.getElementById('status').innerText="", 2000);
     }
+    // 数字起卦逻辑
+function calculateGua() {
+    const n1 = document.getElementById('num1').value;
+    const n2 = document.getElementById('num2').value;
+    const n3 = document.getElementById('num3').value;
+
+    if(!n1 || !n2 || !n3) { alert("请填入三个数字"); return; }
+
+    // 易经求余算法
+    let lower = n1 % 8 || 8; 
+    let upper = n2 % 8 || 8;
+    let motion = n3 % 6 || 6;
+
+    // 这里需要一个简单的对应表将数字转为卦序，或者直接让你选择卦象
+    // 简单起见，我们先实现弹出对应卦象数据到编辑框
+    alert("起卦成功！请在下方调整解卦内容。");
+    document.getElementById('report-area').style.display = 'block';
+    
+    // 假设你当前选中的是某个卦，自动填入
+    // 这里的 currentGua 是你点击或计算出来的卦象对象
+    const data = guaData["01"]; // 举例，实际可根据计算结果匹配
+    document.getElementById('report-gua-name').innerText = data.name;
+    document.getElementById('edit-advice').value = data.advice;
+    document.getElementById('edit-quote').value = data.quote;
+}
+
+// 生成文字报告
+function exportText() {
+    const guaName = document.getElementById('report-gua-name').innerText;
+    const advice = document.getElementById('edit-advice').value;
+    const quote = document.getElementById('edit-quote').value;
+    const insight = document.getElementById('my-insight').value;
+
+    const fullReport = `【周易有答案·解卦报告】\n\n卦象：${guaName}\n\n建议：${advice}\n\n梁冬智慧：${quote}\n\n实战感悟：${insight}\n\n—— 祝君顺遂 ——`;
+    
+    // 自动复制到剪贴板
+    navigator.clipboard.writeText(fullReport).then(() => {
+        alert("文字报告已复制到剪贴板，可以直接粘贴发送给朋友！");
+    });
+}
+
+// 生成图片建议：
+// 生成图片通常需要 html2canvas 插件。
+// 简单做法是提示用户：请调整好内容后，使用手机截屏，这就是最好的“图片报告”。
+function exportImage() {
+    alert("请隐藏侧边栏，直接对当前橙色边框区域进行截屏，即可得到最精美的报告图片！");
+}
     window.onload = init;
 </script>
 </body>
